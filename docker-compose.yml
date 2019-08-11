@@ -1,0 +1,46 @@
+version: '3.3'
+
+services:
+ db:
+   image: mysql:5.7
+   restart: always
+   ports:
+      - "3307:3306"
+   volumes:
+      - db_data:/var/lib/mysql
+   environment:
+     MYSQL_ROOT_PASSWORD: root
+     MYSQL_DATABASE: wordpress
+     MYSQL_USER: root
+     MYSQL_PASSWORD: root
+
+ wp:
+   image: wordpress
+   depends_on:
+     - db
+   restart: always
+   ports:
+     - "80:80"
+   volumes:
+      - wp_data:/var/www/html
+   environment:
+     WORDPRESS_DB_HOST: db:3306
+     WORDPRESS_DB_USER: root
+     WORDPRESS_DB_PASSWORD: root
+     WORDPRESS_DEBUG: 1    
+
+ wp-cli:
+   image: wordpress:cli
+   depends_on:
+      - wp
+      - db
+   user: xfs   
+   volumes:
+      - wp_data:/var/www/html
+      - ./init.sh:/var/www/html/init.sh
+      - ./init.sql:/var/www/html/init.sql
+   command: env WP_LOGIN=${WP_LOGIN} WP_PASSWORD=${WP_PASSWORD} WP_EMAIL=${WP_EMAIL} S3_ACCESS_KEY=${S3_ACCESS_KEY} S3_SECRET_KEY=${S3_SECRET_KEY} ./init.sh
+
+volumes:
+  db_data:
+  wp_data:
